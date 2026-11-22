@@ -54,18 +54,32 @@ const Home = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
 
   const handleShorten = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
+    setError("");
+    setResult(null);
+    setCopied(false);
     try {
       const data = await shortenUrl(input, customCode);
       setResult(data);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
-      alert(err);
+      setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(result.shortUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Couldn't copy automatically. Select the link and copy it.");
     }
   };
 
@@ -121,28 +135,50 @@ const Home = () => {
               className="flex flex-col gap-5 md:gap-6"
             >
               <div className="space-y-2">
-                <label className="text-[9px] md:text-[10px] font-black text-neutral-400 uppercase tracking-widest">
+                <label
+                  htmlFor="longUrl"
+                  className="text-[9px] md:text-[10px] font-black text-neutral-400 uppercase tracking-widest"
+                >
                   Destination URL
                 </label>
                 <input
+                  id="longUrl"
                   type="text"
+                  inputMode="url"
+                  autoComplete="url"
                   required
                   placeholder="https://..."
                   className="input-brutalist"
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    setError("");
+                  }}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[9px] md:text-[10px] font-black text-neutral-400 uppercase tracking-widest">
+                <label
+                  htmlFor="customCode"
+                  className="text-[9px] md:text-[10px] font-black text-neutral-400 uppercase tracking-widest"
+                >
                   Custom Identifier (Optional)
                 </label>
                 <input
+                  id="customCode"
                   type="text"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  maxLength={32}
+                  pattern="[A-Za-z0-9_\-]{3,32}"
+                  title="3–32 letters, numbers, hyphens or underscores"
                   placeholder="e.g. sale-2026"
                   className="input-brutalist"
                   value={customCode}
-                  onChange={(e) => setCustomCode(e.target.value)}
+                  onChange={(e) => {
+                    setCustomCode(e.target.value);
+                    setError("");
+                  }}
                 />
               </div>
               <button
@@ -158,6 +194,14 @@ const Home = () => {
                   </>
                 )}
               </button>
+              {error && (
+                <p
+                  role="alert"
+                  className="border-2 border-red-600 bg-red-50 text-red-700 px-4 py-3 text-xs md:text-sm font-bold"
+                >
+                  {error}
+                </p>
+              )}
             </form>
 
             <AnimatePresence>
@@ -168,16 +212,18 @@ const Home = () => {
                   className="mt-6 md:mt-8 pt-6 md:pt-8 border-t-2 border-black"
                 >
                   <div className="flex items-center justify-between gap-3 bg-neutral-50 p-3 md:p-4 border-2 border-black overflow-hidden">
-                    <span className="text-base md:text-xl font-black truncate">
+                    <a
+                      href={result.shortUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-base md:text-xl font-black truncate hover:underline"
+                    >
                       {result.shortUrl}
-                    </span>
+                    </a>
                     <button
                       type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(result.shortUrl);
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 2000);
-                      }}
+                      onClick={handleCopy}
+                      aria-label={copied ? "Copied" : "Copy short link"}
                       className="p-3 bg-black text-white hover:bg-neutral-800 flex-shrink-0"
                     >
                       {copied ? (
@@ -202,7 +248,7 @@ const Home = () => {
               key={i}
               className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.5em] text-white/80 mx-6 md:mx-10"
             >
-              Sub-40ms Speed • Brutalist Layout • CDN Edge • 90-Day Lifespan
+              Custom Aliases • Brutalist Layout • Secure Redirects • 90-Day Lifespan
             </span>
           ))}
         </div>
@@ -227,18 +273,18 @@ const Home = () => {
             {[
               {
                 icon: <HiOutlineBolt />,
-                title: "Edge Access",
-                desc: "Redirects happen at the nearest node for zero latency.",
+                title: "Branded Links",
+                desc: "Short links live on the MakeLink domain, with optional custom aliases.",
               },
               {
                 icon: <HiOutlineChartBar />,
                 title: "Hard Data",
-                desc: "Granular click tracking without invading user privacy.",
+                desc: "Every click is counted. No personal data is stored with your links.",
               },
               {
                 icon: <HiOutlineShieldCheck />,
                 title: "Secure",
-                desc: "Built-in protection against link injection and malware.",
+                desc: "Only http/https destinations are accepted, and requests are rate limited.",
               },
             ].map((f, i) => (
               <div
@@ -324,12 +370,13 @@ const Home = () => {
               {
                 name: "Core",
                 price: "$0",
-                f: ["1,000 Links", "90 Day Life", "Basic Stats"],
+                f: ["Free Links", "Custom Aliases", "90 Day Life"],
+                available: true,
               },
               {
                 name: "Pro",
                 price: "$12",
-                f: ["Unlimited", "Custom Slug", "24/7 Support"],
+                f: ["Link Analytics", "Longer Life", "Priority Support"],
               },
               {
                 name: "Elite",
@@ -357,9 +404,21 @@ const Home = () => {
                     </li>
                   ))}
                 </ul>
-                <button className="w-full py-4 border-2 border-black font-black uppercase text-[10px] tracking-widest hover:bg-black hover:text-white transition-all">
-                  Get Started
-                </button>
+                {p.available ? (
+                  <a
+                    href="#shorten"
+                    className="w-full py-4 border-2 border-black font-black uppercase text-[10px] tracking-widest hover:bg-black hover:text-white transition-all"
+                  >
+                    Get Started
+                  </a>
+                ) : (
+                  <span
+                    aria-disabled="true"
+                    className="w-full py-4 border-2 border-neutral-300 text-neutral-400 font-black uppercase text-[10px] tracking-widest cursor-not-allowed"
+                  >
+                    Coming Soon
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -382,11 +441,15 @@ const Home = () => {
             />
             <FAQItem
               question="Is it secure?"
-              answer="We use MongoDB Atlas encryption and Node.js isolation for every single redirect."
+              answer="Only http and https destinations are accepted, scripts and other protocols are blocked, and the API is rate limited. We don't check destination sites for malware, so only open links from people you trust."
             />
             <FAQItem
               question="Custom Aliases?"
-              answer="Yes, you can define your own identifiers for better branding and memorability."
+              answer="Yes. Aliases can be 3–32 letters, numbers, hyphens or underscores, and are first come, first served."
+            />
+            <FAQItem
+              question="Do you use analytics?"
+              answer="This website uses Microsoft Clarity to understand how visitors use the page. Short-link redirects only add one to the link's click count; no personal data is stored with your links."
             />
           </div>
         </div>
