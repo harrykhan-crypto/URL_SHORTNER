@@ -1,0 +1,26 @@
+# Render Blueprint for the MakeLink API.
+# In Render: New + -> Blueprint -> pick this repo. You'll be asked for the
+# values marked `sync: false`. See DEPLOY.md for the full walkthrough.
+services:
+  - type: web
+    name: makelink-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/ping
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      # Requests arrive via Vercel's rewrite and then Render's proxy.
+      - key: TRUST_PROXY
+        value: "2"
+      # Your MongoDB Atlas connection string.
+      - key: MONGO_URI
+        sync: false
+      # Your Vercel site, e.g. https://your-site.vercel.app (no trailing slash).
+      - key: BASE_URL
+        sync: false

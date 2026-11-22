@@ -1,5 +1,5 @@
 process.env.NODE_ENV = "test";
-process.env.BASE_URL = "https://make-link.vercel.app";
+process.env.BASE_URL = "https://short.example.com";
 
 const { test, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
@@ -20,6 +20,15 @@ beforeEach(() => {
     store.set(doc.urlCode, saved);
     return saved;
   };
+  Url.find = (filter) => ({
+    lean: async () =>
+      filter.urlCode.$in
+        .filter((c) => store.has(c))
+        .map((c) => {
+          const { urlCode, clicks, createdAt } = store.get(c);
+          return { urlCode, clicks, createdAt };
+        }),
+  });
   Url.findOneAndUpdate = async (filter, update) => {
     const doc = store.get(filter.urlCode);
     if (!doc) return null;
@@ -47,7 +56,7 @@ test("bare domain gets https:// and a 7-char code", async () => {
   assert.equal(res.status, 201);
   assert.equal(res.body.longUrl, "https://example.com/path?q=1");
   assert.match(res.body.urlCode, /^[a-z0-9]{7}$/);
-  assert.equal(res.body.shortUrl, `https://make-link.vercel.app/${res.body.urlCode}`);
+  assert.equal(res.body.shortUrl, `https://short.example.com/${res.body.urlCode}`);
 });
 
 test("host with port is not mistaken for a scheme", async () => {
@@ -65,7 +74,7 @@ for (const bad of [
   "httpfoo",
   "localhost",
   "https://user:pass@example.com",
-  "https://make-link.vercel.app/abc",
+  "https://short.example.com/abc",
 ]) {
   test(`rejects ${bad}`, async () => {
     const res = await shorten({ longUrl: bad });
@@ -115,7 +124,10 @@ test("database errors don't leak details", async () => {
   Url.create = async () => {
     throw new Error("secret connection string mongodb+srv://x");
   };
+  const realError = console.error;
+  console.error = () => {}; // the server logs it; keep test output clean
   const res = await shorten({ longUrl: "https://example.com" });
+  console.error = realError;
   assert.equal(res.status, 500);
   assert.doesNotMatch(JSON.stringify(res.body), /mongodb/);
 });
@@ -173,4 +185,25 @@ test("rate limiter keys on the client IP behind a proxy", async () => {
   const remaining = (r) => r.headers["ratelimit"];
   assert.ok(remaining(a) && remaining(b));
   assert.equal(remaining(a), remaining(b));
+});
+
+test("stats returns click counts and expiry for known codes only", async () => {
+  await shorten({ longUrl: "https://example.com", customCode: "stat-one" });
+  await request(app).get("/stat-one");
+  await request(app).get("/stat-one");
+
+  const res = await request(app).get("/api/url/stats?codes=STAT-ONE,missing1,bad%20code");
+  assert.equal(res.status, 200);
+  assert.equal(res.body.length, 1);
+  assert.equal(res.body[0].urlCode, "stat-one");
+  assert.equal(res.body[0].clicks, 2);
+  const lifetime = new Date(res.body[0].expiresAt) - new Date(res.body[0].createdAt);
+  assert.equal(lifetime, 90 * 24 * 60 * 60 * 1000);
+  assert.equal(res.body[0].longUrl, undefined);
+});
+
+test("stats rejects empty and oversized requests", async () => {
+  assert.equal((await request(app).get("/api/url/stats")).status, 400);
+  const many = Array.from({ length: 51 }, (_, i) => `code${i}`).join(",");
+  assert.equal((await request(app).get(`/api/url/stats?codes=${many}`)).status, 400);
 });

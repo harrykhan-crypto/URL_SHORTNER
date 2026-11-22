@@ -1,38 +1,34 @@
-﻿# URL Shortner - MakeLink
+# MakeLink — URL Shortener
 
-![MakeLink Cover](client/public/Cover.png)
+![MakeLink](docs/screenshot.png)
 
-**MakeLink** is a high-performance, professional-grade URL shortener built with the MERN stack. Designed with a **Modernist Brutalist** aesthetic, it focuses on raw engineering, architectural clarity, and lightning-fast execution. It transforms messy raw data into sleek, branded assets for the modern web.
+**MakeLink** is a free, no-sign-up URL shortener built with the MERN stack: paste a link,
+get a short one, pick a custom alias, download a QR code, and see how many clicks it gets.
 
 ---
 
-## 🚀 Live Preview
+## 🚀 Deploy your own
 
-- **[Live Preview](https://make-link.vercel.app/)**
-  <br>Experience MakeLink in action.
+See **[DEPLOY.md](DEPLOY.md)** for a step-by-step guide (MongoDB Atlas + Render + Vercel,
+all on free plans).
 
-## 🎨 Figma UI Inspiration
-
-- **[Figma Design File](https://www.figma.com/community/file/1371040846150181225/makelink-brutalist-ui-kit-design-system-url-shortner)**
-  <br>Experience MakeLink in figma.
-  
 ---
 
 ## ✨ Features
 
-- **Branded Redirects**: Short links are served from the frontend domain via Vercel rewrites.
-- **Custom Identifiers**: Full support for branded slugs and personalized aliases.
-- **Auto-Protocol**: Intelligent normalization and security sanitization of destination URLs.
-- **Security Hardened**: Helmet headers, per-IP rate limiting, and strict http/https-only URL validation.
-- **90-Day Lifespan**: Automatic database auto-purge via MongoDB TTL (Time-To-Live) indexing.
-- **Modernist Brutalist UI**: High-contrast neutral-scale interface optimized for focus, functional speed, and responsiveness.
-- **Advanced SEO**: Fully implemented JSON-LD structured data, OpenGraph, and Twitter Card metadata.
+- **One-click shortening**: paste any http/https link; `example.com` works without the `https://`.
+- **Custom aliases**: pick your own short link (3–32 letters, numbers, `-`, `_`).
+- **QR codes**: show and download a PNG for any new link.
+- **Recent links with click counts**: saved in your browser, no account needed.
+- **Light & dark mode**: follows your system, with a toggle.
+- **90-day lifespan**: links are deleted automatically via a MongoDB TTL index.
+- **Hardened API**: Helmet headers, per-IP rate limiting, strict URL validation, tests.
 
 ---
 
 ## 🛠️ Technologies Used
 
-- **Frontend**: React (Vite), Tailwind CSS v4, Framer Motion
+- **Frontend**: React (Vite), Tailwind CSS v4, qrcode.react
 - **Backend**: Node.js, Express.js, Mongoose
 - **Database**: MongoDB Atlas
 - **DevOps**: Vercel (Edge Proxying), Render (API Deployment)
@@ -51,11 +47,11 @@ MONGO_URI=your_mongodb_atlas_uri
 BASE_URL=http://localhost:5000
 # Optional:
 # TRUST_PROXY=1        # proxy hops in front of the API (use 2 for Vercel rewrites -> Render)
-# CORS_ORIGIN=https://make-link.vercel.app   # comma-separated; defaults to *
+# CORS_ORIGIN=https://your-site.vercel.app   # comma-separated; defaults to *
 ```
 
 `BASE_URL` is the domain short links are built on. In production set it to the
-frontend domain (e.g. `https://make-link.vercel.app`) so links go through the
+frontend domain (e.g. `https://your-site.vercel.app`) so links go through the
 Vercel rewrite.
 
 ### Client Environment (`/client/.env.local`)
@@ -73,13 +69,13 @@ To get a local copy up and running, follow these steps:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/saad-shaikh-256/URL-Shortner.git
+   git clone https://github.com/harrykhan-crypto/URL_SHORTNER.git
    ```
 
 2. **Navigate to the root folder:**
 
    ```bash
-   cd URL-Shortner
+   cd URL_SHORTNER
    ```
 
 3. **Install dependencies:**
@@ -109,22 +105,22 @@ To get a local copy up and running, follow these steps:
 - **Automatic Deletion**: This project uses a TTL index on MongoDB. All links are automatically deleted from the database exactly 90 days after creation.
 - **Security Policy**: Only `http:` and `https:` destinations are accepted; `javascript:`, `data:`, `file:` and other protocols are rejected.
 - **Custom Aliases**: 3–32 characters (letters, numbers, `-`, `_`), case-insensitive. A few names such as `api` are reserved.
-- **Production Proxy**: In production, the `vercel.json` handles rewrites so that users only see the `make-link.vercel.app`domain.
+- **Production Proxy**: In production, the `vercel.json` handles rewrites so short links use your Vercel domain. Set your Render address in `client/vercel.json` (see [DEPLOY.md](DEPLOY.md)).
 
 ---
 
 ## 🚧 Future Enhancements
 
-- Real-time click analytics dashboard
-- QR Code generation for every shortened link
-- Password-protected link redirects
-- Custom domain mapping for enterprise users
+- Link analytics dashboard (referrers, countries, time series)
+- Password-protected links
+- Custom domains
+- Automatic malicious-URL screening
 
 ---
 
 ## 🙌 Credits
 
-- **Designed & Developed by [Saad Shaikh](https://saad-shaikh.vercel.app/)**
+- **Original design & development by [Saad Shaikh](https://saad-shaikh.vercel.app/)**
 
 ---
 
