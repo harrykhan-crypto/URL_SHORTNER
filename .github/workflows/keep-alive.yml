@@ -2,8 +2,12 @@ name: Keep Alive (API + MongoDB)
 
 # Pings the API health check once a day. /api/ping runs a database command,
 # so this keeps the MongoDB Atlas free cluster from pausing for inactivity.
-# Note: Render's free tier still sleeps after ~15 min idle; the frontend's
-# boot screen waits for it to wake.
+# Render's free tier still sleeps after ~15 min idle; the site shows a
+# "Waking server" status while it starts.
+#
+# Setup: GitHub repo -> Settings -> Secrets and variables -> Actions ->
+# Variables -> New repository variable:
+#   API_URL = https://YOUR-API.onrender.com
 
 on:
   schedule:
@@ -16,10 +20,14 @@ jobs:
     steps:
       - name: Ping API health check
         env:
-          API_URL: https://url-shortner-e7ea.onrender.com/api/ping
+          API_URL: ${{ vars.API_URL }}
         run: |
+          if [ -z "$API_URL" ]; then
+            echo "API_URL repository variable is not set; skipping."
+            exit 0
+          fi
           # A cold start can take ~1 minute, so retry before failing.
           curl --fail --silent --show-error --max-time 90 \
-            --retry 5 --retry-delay 20 --retry-all-errors "$API_URL"
+            --retry 5 --retry-delay 20 --retry-all-errors "${API_URL%/}/api/ping"
           echo
           echo "Pinged API at $(date -u)"

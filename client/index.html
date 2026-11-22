@@ -4,76 +4,73 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="theme-color"
+      content="#F6F5F0"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0E0E0C"
+      media="(prefers-color-scheme: dark)"
+    />
 
-    <!-- Microsoft Clarity -->
-    <script type="text/javascript">
-      (function(c,l,a,r,i,t,y){
-          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-      })(window, document, "clarity", "script", "zhkgu7xr1m");
+    <!-- Apply the saved theme before first paint to avoid a flash. -->
+    <script>
+      try {
+        var t = localStorage.getItem("theme");
+        if (t === "light" || t === "dark")
+          document.documentElement.dataset.theme = t;
+      } catch (e) {}
     </script>
 
-    <!-- Primary SEO -->
-    <title>MakeLink | Professional Brutalist URL Shortener</title>
-    <meta
-      name="title"
-      content="MakeLink | Professional Brutalist URL Shortener"
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
     />
+
+    <!-- CLARITY -->
+
+    <title>MakeLink | Free URL Shortener</title>
     <meta
       name="description"
-      content="MakeLink is a free, minimalist URL shortener with custom aliases, 90-day auto-expiry, and fast redirects."
+      content="Shorten any link in one click. Free, no sign-up, custom aliases, QR codes and click counts. Links expire after 90 days."
     />
     <meta name="robots" content="index, follow" />
-    <meta name="language" content="English" />
-    <meta name="author" content="Saad Shaikh" />
+    <link rel="canonical" href="__SITE_URL__/" />
 
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://make-link.vercel.app/" />
-    <meta
-      property="og:title"
-      content="MakeLink | Link Engineering for Professionals"
-    />
+    <meta property="og:url" content="__SITE_URL__/" />
+    <meta property="og:title" content="MakeLink | Free URL Shortener" />
     <meta
       property="og:description"
-      content="Transform long URLs into high-performance branded assets. Minimalist Brutalist Design."
+      content="Shorten any link in one click. No sign-up, custom aliases and QR codes."
     />
-    <meta
-      property="og:image"
-      content="https://make-link.vercel.app/og-image.png"
-    />
+    <meta property="og:image" content="__SITE_URL__/og-image.png" />
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://make-link.vercel.app/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="MakeLink | Free URL Shortener" />
     <meta
-      property="twitter:title"
-      content="MakeLink | Link Engineering for Professionals"
+      name="twitter:description"
+      content="Shorten any link in one click. No sign-up, custom aliases and QR codes."
     />
-    <meta
-      property="twitter:description"
-      content="Brutalist URL management. Fast, Secure, and Neutral."
-    />
-    <meta
-      property="twitter:image"
-      content="https://make-link.vercel.app/og-image.png"
-    />
+    <meta name="twitter:image" content="__SITE_URL__/og-image.png" />
 
-    <!-- Advanced SEO: JSON-LD Structured Data -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
+        "@type": "WebApplication",
         "name": "MakeLink",
-        "operatingSystem": "Web",
+        "url": "__SITE_URL__/",
         "applicationCategory": "UtilitiesApplication",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "description": "A minimalist URL shortener with custom aliases and a brutalist design."
+        "operatingSystem": "Web",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "description": "A free URL shortener with custom aliases, QR codes and click counts."
       }
     </script>
   </head>
