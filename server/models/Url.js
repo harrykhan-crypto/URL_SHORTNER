@@ -8,6 +8,7 @@ const UrlSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+    // TTL index: MongoDB deletes the document 90 days after creation.
     index: { expires: "90d" },
   },
 });

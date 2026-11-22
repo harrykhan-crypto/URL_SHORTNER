@@ -1,58 +1,79 @@
 const Url = require("../models/Url");
-const crypto = require("crypto");
+const {
+  normalizeUrl,
+  normalizeAlias,
+  generateCode,
+} = require("../utils/validation");
 
-const isSafeUrl = (url) => {
-  const forbiddenProtocols = ["javascript:", "data:", "vbscript:", "file:"];
-  const lowerUrl = url.toLowerCase().trim();
+const MAX_GENERATION_ATTEMPTS = 5;
 
-  if (forbiddenProtocols.some((proto) => lowerUrl.startsWith(proto)))
-    return false;
+const isDuplicateKeyError = (err) => err && err.code === 11000;
 
-  const xssPattern = /<script|%3Cscript|javascript:|alert\(|onerror=/i;
-  if (xssPattern.test(lowerUrl)) return false;
-
-  return true;
-};
+const getBaseUrl = (req) =>
+  (process.env.BASE_URL || `${req.protocol}://${req.get("host")}`).replace(
+    /\/+$/,
+    "",
+  );
 
 exports.shortenUrl = async (req, res) => {
   try {
-    let { longUrl, customCode } = req.body;
-    const baseUrl = process.env.BASE_URL;
+    const body = req.body || {};
+    const baseUrl = getBaseUrl(req);
 
-    console.log("Request received for URL:", longUrl);
-    if (!isSafeUrl(longUrl)) {
-      return res.status(400).json({
-        message: "Security Alert: This URL contains a forbidden pattern.",
-      });
+    let ownHost = null;
+    try {
+      ownHost = new URL(baseUrl).hostname;
+    } catch {
+      /* ignore malformed BASE_URL; it only disables the loop check */
     }
 
-    if (!longUrl) return res.status(400).json({ message: "URL is required" });
+    const { url: longUrl, error: urlError } = normalizeUrl(
+      body.longUrl,
+      ownHost,
+    );
+    if (urlError) return res.status(400).json({ message: urlError });
 
-    if (!longUrl.startsWith("http")) {
-      longUrl = `https://${longUrl}`;
+    const { code: alias, error: aliasError } = normalizeAlias(body.customCode);
+    if (aliasError) return res.status(400).json({ message: aliasError });
+
+    if (alias) {
+      try {
+        const saved = await Url.create({
+          longUrl,
+          urlCode: alias,
+          shortUrl: `${baseUrl}/${alias}`,
+        });
+        return res.status(201).json(saved);
+      } catch (err) {
+        if (isDuplicateKeyError(err)) {
+          return res
+            .status(409)
+            .json({ message: "That alias is already taken" });
+        }
+        throw err;
+      }
     }
 
-    let urlCode;
-    if (customCode && customCode.trim() !== "") {
-      urlCode = customCode
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9-_]/g, "");
-      const existingCustom = await Url.findOne({ urlCode });
-      if (existingCustom)
-        return res.status(400).json({ message: "Alias taken" });
-    } else {
-      urlCode = crypto.randomBytes(3).toString("hex");
+    // Random code: retry on the (rare) collision instead of failing.
+    for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
+      const urlCode = generateCode();
+      try {
+        const saved = await Url.create({
+          longUrl,
+          urlCode,
+          shortUrl: `${baseUrl}/${urlCode}`,
+        });
+        return res.status(201).json(saved);
+      } catch (err) {
+        if (!isDuplicateKeyError(err)) throw err;
+      }
     }
 
-    const shortUrl = `${baseUrl}/${urlCode}`;
-    const newUrl = new Url({ longUrl, shortUrl, urlCode, date: new Date() });
-
-    await newUrl.save();
-    console.log("URL Saved Successfully:", urlCode);
-    return res.status(201).json(newUrl);
+    throw new Error("Could not generate a unique code");
   } catch (err) {
-    console.error("SERVER ERROR:", err);
-    return res.status(500).json({ message: err.message });
+    console.error("SHORTEN ERROR:", err);
+    return res
+      .status(500)
+      .json({ message: "Something went wrong. Please try again." });
   }
 };

@@ -1,7 +1,7 @@
 {
-   "name": "swiftlink-root",
+   "name": "makelink-root",
    "version": "1.0.0",
-   "description": "Root script to run SwiftLink MERN stack",
+   "description": "Root scripts to run the MakeLink MERN stack",
    "main": "index.js",
    "scripts": {
       "install-all": "cd server && npm install && cd ../client && npm install",

@@ -1,24 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import MainLayout from "./layouts/MainLayout";
 import Home from "./pages/Home";
 import BootScreen from "./components/BootScreen";
-import { pingServer } from "./services/api";
+
+const hasBootedThisSession = () => {
+  try {
+    return sessionStorage.getItem("hasBooted") === "true";
+  } catch {
+    return false;
+  }
+};
 
 const App = () => {
-  const [isBooting, setIsBooting] = useState(true);
-
-  useEffect(() => {
-    pingServer();
-
-    const hasBooted = sessionStorage.getItem("hasBooted");
-    if (hasBooted) {
-      setIsBooting(false);
-    }
-  }, []);
+  const [isBooting, setIsBooting] = useState(() => !hasBootedThisSession());
 
   const handleBootComplete = () => {
-    sessionStorage.setItem("hasBooted", "true");
+    try {
+      sessionStorage.setItem("hasBooted", "true");
+    } catch {
+      /* storage unavailable (private mode); boot screen will show again */
+    }
     setIsBooting(false);
   };
 

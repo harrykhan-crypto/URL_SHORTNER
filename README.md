@@ -20,10 +20,10 @@
 
 ## ✨ Features
 
-- **Sub-40ms Redirection**: Engineered for zero-latency user experience using Edge proxying via Vercel Rewrites.
+- **Branded Redirects**: Short links are served from the frontend domain via Vercel rewrites.
 - **Custom Identifiers**: Full support for branded slugs and personalized aliases.
 - **Auto-Protocol**: Intelligent normalization and security sanitization of destination URLs.
-- **Security Hardened**: Built-in protection via Helmet, Rate-Limiting, and forbidden protocol filtering.
+- **Security Hardened**: Helmet headers, per-IP rate limiting, and strict http/https-only URL validation.
 - **90-Day Lifespan**: Automatic database auto-purge via MongoDB TTL (Time-To-Live) indexing.
 - **Modernist Brutalist UI**: High-contrast neutral-scale interface optimized for focus, functional speed, and responsiveness.
 - **Advanced SEO**: Fully implemented JSON-LD structured data, OpenGraph, and Twitter Card metadata.
@@ -49,7 +49,14 @@ To run this project locally, create the following files:
 PORT=5000
 MONGO_URI=your_mongodb_atlas_uri
 BASE_URL=http://localhost:5000
+# Optional:
+# TRUST_PROXY=1        # proxy hops in front of the API (use 2 for Vercel rewrites -> Render)
+# CORS_ORIGIN=https://make-link.vercel.app   # comma-separated; defaults to *
 ```
+
+`BASE_URL` is the domain short links are built on. In production set it to the
+frontend domain (e.g. `https://make-link.vercel.app`) so links go through the
+Vercel rewrite.
 
 ### Client Environment (`/client/.env.local`)
 
@@ -89,13 +96,20 @@ To get a local copy up and running, follow these steps:
 
 5. **Open your browser and visit** [http://localhost:5173](http://localhost:5173) _(or the port shown in your terminal)_.
 
+6. **Run the API tests:**
+
+   ```bash
+   cd server && npm test
+   ```
+
 ---
 
 ## 📝 Notes
 
 - **Automatic Deletion**: This project uses a TTL index on MongoDB. All links are automatically deleted from the database exactly 90 days after creation.
-- **Security Policy**: The system blocks `javascript`:, `data`:, and `file`: protocols to prevent XSS and session hijacking.
-  Production Proxy: In production, the `vercel.json` handles rewrites so that users only see the `make-link.vercel.app`domain.
+- **Security Policy**: Only `http:` and `https:` destinations are accepted; `javascript:`, `data:`, `file:` and other protocols are rejected.
+- **Custom Aliases**: 3–32 characters (letters, numbers, `-`, `_`), case-insensitive. A few names such as `api` are reserved.
+- **Production Proxy**: In production, the `vercel.json` handles rewrites so that users only see the `make-link.vercel.app`domain.
 
 ---
 
